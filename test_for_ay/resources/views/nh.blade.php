@@ -1,1 +1,0 @@
-<h1>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Nam fugiat ducimus consequatur officia, tempore ipsum, facilis natus impedit aliquam incidunt commodi? Dolorum, eligendi aliquam quos repudiandae consectetur ipsum repellendus rem.</h1>
