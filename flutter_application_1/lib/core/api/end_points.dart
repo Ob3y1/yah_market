@@ -5,6 +5,9 @@ class EndPoints {
   static String logout = "logout";
   static String showProfile = "user";
   static String update = "user";
+  static String categories = "categories";
+ 
+  static String productsid = "products/{id}";
 }
 
 class ApiKey {

@@ -38,3 +38,26 @@ final class GetUserFailure extends UserState {
 
   GetUserFailure({required this.errMessage,});
 }
+
+class CategoriesLoading extends UserState {}
+ class CategoriesSuccess extends UserState {
+  final List categories;
+  CategoriesSuccess(this.categories);
+} class CategoriesError extends UserState {
+  final String message;
+  CategoriesError(this.message);
+}
+
+class ProductsLoading extends UserState {}
+
+class ProductsSuccess extends UserState {
+  final List products;
+
+  ProductsSuccess(this.products);
+}
+
+class ProductsError extends UserState {
+  final String message;
+
+  ProductsError(this.message);
+}

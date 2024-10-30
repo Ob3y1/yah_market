@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/api/api_consumer.dart';
 import 'package:flutter_application_1/core/api/end_points.dart';
@@ -9,9 +10,10 @@ import 'package:flutter_application_1/cubit/user_state.dart';
 import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/model/login_model.dart';
 import 'package:flutter_application_1/model/user_model.dart';
-import 'package:flutter_application_1/screen/edit.dart';
 import 'package:flutter_application_1/screen/home.dart';
+import 'package:flutter_application_1/screen/login.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class UserCubit extends Cubit<UserState> {
   UserCubit(this.api) : super(UserInitial());
@@ -26,29 +28,29 @@ class UserCubit extends Cubit<UserState> {
     text: prefs.getString("email"),
   );
 
-  final TextEditingController editbirthDateController = TextEditingController(
+  late final TextEditingController editbirthDateController =
+      TextEditingController(
     text: prefs.getString("birth_date"),
   );
-
-  String? editselectedGender;
+  String? editselectedGender = prefs.getString("gender");
 // sign in email
   final TextEditingController signInEmail = TextEditingController();
 // sign in password
   final TextEditingController signInPassword = TextEditingController();
+  //sign in conf
+  final TextEditingController signInconPassword = TextEditingController();
 // sign up Form Key
   GlobalKey<FormState> signUpFormKey = GlobalKey();
 // sign up name
   final TextEditingController signUpName = TextEditingController();
-// sign up phone number
-  final TextEditingController signUpPhone = TextEditingController();
 // sign up email
   final TextEditingController signUpEmail = TextEditingController();
 // sign up password
   final TextEditingController signUpPassword = TextEditingController();
   //confirmpassword
   final TextEditingController signUpconfirmPassword = TextEditingController();
-  //birthday
-  final TextEditingController date = TextEditingController();
+  DateTime selectedDate = DateTime.now(); // القيمة الافتراضية
+
   //gender
   String? country = "";
   LoginModel? user;
@@ -97,7 +99,7 @@ class UserCubit extends Cubit<UserState> {
         // معالجة أخطاء الاستجابة من السيرفر
         print(
             'Server Error: ${e.response?.statusCode} - ${e.response?.statusMessage}');
-        emit(SignInFailuer(errMessage: "يوجد  خطا في الاتصال"));
+        emit(SignInFailuer(errMessage: "يوجد خطأ في ادخال المعلومات"));
         //emit(SignInFailuer(errMessage: "Server Error: ${e.response?.statusMessage}"));
       } else {
         print('Unexpected Error: ${e.message}');
@@ -110,34 +112,41 @@ class UserCubit extends Cubit<UserState> {
     }
   }
 
-  signUp() async {
-    var body = {
+  signUp(BuildContext context) async {
+    emit(SignInloading());
+
+    // جمع البيانات في خريطة
+    final data = {
       "name": signUpName.text,
       "email": signUpEmail.text,
-      "birth_date": date.text,
+      "birth_date": DateFormat('yyyy-MM-dd').format(selectedDate),
       "gender": country,
-      "password": signUpPassword.text
+      "password": signUpPassword.text,
     };
-
-    var url = EndPoints.basUrl + EndPoints.register;
+    print(data);
     try {
-      emit(SignUploading());
-      Response response = await dio.post(
-        url,
-        data: body,
+      final response = await dio.post(
+        'http://localhost:8000/api/register',
+        data: data,
       );
 
-      if (response.statusCode != null &&
-          response.statusCode! >= 200 &&
-          response.statusCode! < 300) {
+      if (response.statusCode == 200) {
         print(response.data);
-        emit(SignUpSuccess());
+        print(data);
       } else {
-        print(response.statusMessage);
+        emit(SignUpSuccess());
+        // الانتقال إلى صفحة تسجيل الدخول بعد نجاح التسجيل
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false, // إزالة جميع الصفحات من مكدس التنقل
+        );
       }
-    } on ServerException catch (e) {
-      emit(SignUpFailuer(errMessage: e.errorModel.error));
-      print('Error: $e');
+    } catch (e) {
+      if (e is DioError) {
+        print('Error: ${e.response?.data}');
+      }
+      emit(SignUpFailuer(errMessage: "The email has already been taken"));
     }
   }
 
@@ -173,7 +182,7 @@ class UserCubit extends Cubit<UserState> {
 
     try {
       Response response = await dio.get(
-        'http://localhost:8000/api/user',
+        url,
         options: Options(headers: headers),
       );
       if (response.statusCode! >= 200 && response.statusCode! < 300) {
@@ -206,8 +215,7 @@ class UserCubit extends Cubit<UserState> {
       "name": editnameController.text,
       "email": editemailController.text,
       "birth_date": editbirthDateController.text,
-      "gender": editselectedGender,
-      "deleted_at": null
+      "gender": editselectedGender
     };
 
     print('Body: $body'); // طباعة الجسم قبل الطلب
@@ -238,6 +246,69 @@ class UserCubit extends Cubit<UserState> {
       print('Caught an exception: $e'); // طباعة الاستثناء
       emit(GetUserFailure(
           errMessage: e.toString())); // إصدار حالة الفشل مع رسالة الخطأ
+    }
+  }
+
+  categories() async {
+    emit(CategoriesLoading());
+    var url = EndPoints.basUrl + EndPoints.categories;
+    var headers = {
+      'Authorization': "Bearer ${prefs.getString("token")}",
+    };
+
+    var response = await dio.request(
+      url,
+      options: Options(
+        method: 'GET',
+        headers: headers,
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      print(json.encode(response.data));
+      emit(CategoriesSuccess(response.data));
+    } else {
+      print(response.statusMessage);
+    }
+  }
+
+  // ignore: non_constant_identifier_names
+  Categoryprod(int id) async {
+    emit(ProductsLoading());
+
+    var url = "${EndPoints.basUrl}categories/$id/products";
+    var headers = {
+      'Authorization': "Bearer ${prefs.getString("token")}",
+    };
+
+    var response = await dio.request(
+      url,
+      options: Options(
+        method: 'GET',
+        headers: headers,
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      print(json.encode(response.data));
+      emit(ProductsSuccess(response.data));
+      // Emit the categories list
+    } else {
+      print(response.statusMessage);
+    }
+  }
+
+  Future<Product> productsinfo(int id1) async {
+    var url = "${EndPoints.basUrl}products/$id1";
+    var headers = {'Authorization': "Bearer ${prefs.getString("token")}"};
+
+    var response = await dio.get(url, options: Options(headers: headers));
+
+    if (response.statusCode == 200) {
+      return Product.fromJson(
+          response.data); // تأكد من تحويل البيانات إلى كائن Product
+    } else {
+      throw Exception('Failed to load product'); // تفعيل الاستثناء عند الفشل
     }
   }
 }
