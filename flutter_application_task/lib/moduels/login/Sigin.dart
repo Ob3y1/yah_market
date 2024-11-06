@@ -3,12 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_task/Components/custom_button.dart';
 import 'package:flutter_application_task/Components/custom_textField.dart';
-
 import 'package:flutter_application_task/moduels/login/login_controller.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
-// ignore: must_be_immutable
 class Sigin extends StatelessWidget {
   LoginController controller = Get.find();
   Sigin({Key? key}) : super(key: key);
@@ -17,10 +15,7 @@ class Sigin extends StatelessWidget {
   Widget build(BuildContext context) {
     bool _isPasswordVisible = false;
 
-    
-
     return Scaffold(
-      
       body: Stack(
         children: [
           Container(
@@ -59,7 +54,8 @@ class Sigin extends StatelessWidget {
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10),
+                
+                padding:EdgeInsets.all(8),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -71,16 +67,14 @@ class Sigin extends StatelessWidget {
                       keyboard: TextInputType.emailAddress,
                       textColor: Colors.black,
                     ),
-                    SizedBox(
-                      height: 10,
-                    ),
+                    SizedBox(height: 10),
                     CustomTextfield(
                       keyboard: TextInputType.visiblePassword,
                       onChanged: (value) {
                         controller.password = value;
                       },
                       textColor: Colors.black,
-                      labelText: "password",
+                      labelText: "Password",
                       suffixIcon: IconButton(
                         icon: Icon(
                           _isPasswordVisible
@@ -89,15 +83,11 @@ class Sigin extends StatelessWidget {
                               : Icons.visibility_off,
                         ),
                         onPressed: () {
-                          // setState(() {
                           _isPasswordVisible = !_isPasswordVisible;
-                          // });
                         },
                       ),
                     ),
-                    SizedBox(
-                      height: 12,
-                    ),
+                    SizedBox(height: 12),
                     SizedBox(height: 50),
                     CustomButton(
                       width: 350,
@@ -110,15 +100,13 @@ class Sigin extends StatelessWidget {
                       },
                       buttonName: "Sign IN",
                     ),
-                    SizedBox(
-                      height: 100,
-                    ),
+                    SizedBox(height: 100),
                     Align(
                       alignment: Alignment.bottomRight,
                       child: Column(
                         children: [
                           Text(
-                            "dont have an account ?",
+                            "Don't have an account?",
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -127,14 +115,11 @@ class Sigin extends StatelessWidget {
                           GestureDetector(
                             onTap: () {
                               onClickRegister1();
-                           
                             },
                             child: TextButton(
-                              onPressed: () {
-                           
-                              },
+                              onPressed: () {},
                               child: Text(
-                                "Sigin in",
+                                "Sign in",
                                 style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 15,
@@ -156,21 +141,18 @@ class Sigin extends StatelessWidget {
     );
   }
 
-  void onClickRegister1() async{
-     print("Register button clicked");
-    EasyLoading.show(
-      status: "loading",
-    );
-    await controller.LoginOnClick();
+ void onClickRegister1() async {
+  print("Register button clicked");
+  EasyLoading.show(status: "loading");
 
-    if (controller.loginStatus) {
-      EasyLoading.showSuccess("login sucsses",dismissOnTap: true);
-      Get.offAllNamed('/update_profile');
-    } else {
-      EasyLoading.showError(controller.message,duration: Duration(seconds: 10),dismissOnTap: true);
-      
-     
+  await controller.loginOnClick();
+
+  if (controller.loginStatus) {
+    EasyLoading.showSuccess("Login successful", dismissOnTap: true);
+    Get.offAllNamed('/first1'); // تأكد أن الصفحة /first1 جاهزة للعمل بدون بيانات ناقصة
+  } else {
+    EasyLoading.showError(controller.message, duration: Duration(seconds: 10), dismissOnTap: true);
     Get.snackbar("Error", "Login failed. Please check your credentials and try again.");
-    }
   }
+}
 }
